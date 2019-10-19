@@ -1,21 +1,18 @@
 extern unsigned int _DATA_ROM_START;
 extern unsigned int _DATA_RAM_START;
 extern unsigned int _DATA_RAM_END;
-extern unsigned int __bss_start__;
-extern unsigned int __bss_end__;
+extern unsigned int _BSS_START;
+extern unsigned int _BSS_END;
+extern unsigned int _HEAP_START;
+extern unsigned int _HEAP_END;
+extern unsigned int _HEAP_SIZE;
+extern unsigned int _STACK_SIZE;
+extern unsigned int _STACK_BEGIN;
+extern unsigned int _STACK_END;
 
-#define STACK_TOP 0x20005000
-void startup();
+extern void main();
 
-unsigned int * myvectors[2] 
-__attribute__ ((section("vectors")))= {
-    (unsigned int *)    STACK_TOP,  // stack pointer
-    (unsigned int *)    startup     // code entry point
-};
-
-void main();
-
-void startup()
+void reset_handler()
 {
     /* Copy data belonging to the `.data` section from its
      * load time position on flash (ROM) to its run time position
@@ -34,8 +31,8 @@ void startup()
 
     /* Initialize data in the `.bss` section to zeros.
      */
-    unsigned int * bss_start_p = &__bss_start__; 
-    unsigned int * bss_end_p = &__bss_end__;
+    unsigned int * bss_start_p = &_BSS_START; 
+    unsigned int * bss_end_p = &_BSS_END;
 
     while(bss_start_p != bss_end_p)
     {

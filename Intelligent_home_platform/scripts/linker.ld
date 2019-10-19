@@ -11,33 +11,63 @@ MEMORY
 
 SECTIONS
 {
-    .  = 0x0;         /* From 0x00000000 */
-
-    .text : 
+    .  = 0x0;         
+    
+    .vector_table : ALIGN(4)
     {
-        *(vectors)    /* Vector table */
-        *(.text)      /* Program code */
+        KEEP(*(.vector_table))    
     }
-    .rodata : 
+    
+    .text : ALIGN(4) 
     {
-        *(.rodata)    /* Read only data */
+        *(.text)      
     }
+    
+    .rodata : ALIGN(4)
+    {
+        *(.rodata)    
+    }
+    
     _DATA_ROM_START = .;
 
-    .  = 0x20000000;  /* From 0x20000000 */      
+    .  = 0x20000000;        
 
     _DATA_RAM_START = .;
-    .data : AT(_DATA_ROM_START) 
+    
+    .data : AT(_DATA_ROM_START) ALIGN(4) 
     {
-        *(.data)      /* Data memory */
+        *(.data)      
     }
+    
     _DATA_RAM_END = .;
 
-    __bss_start__ = .;   /* Indicates where BSS section starts in RAM */
-    .bss :
+    _BSS_START = .;   
+    
+    .bss : ALIGN(4)
     {
-        *(.bss)       /* Zero-filled run time allocate data memory */
+        *(.bss)       
     }
-    __bss_end__ = .;     /* Indicates where BSS section ends in RAM */
+    
+    _BSS_END = .;     
+    
+    _HEAP_START = .;
+    
+    .heap : ALIGN(4)
+    {
+        *(.heap)
+    } > RAM
+    
+    _HEAP_END =.;
+    _HEAP_SIZE = _HEAP_END - _HEAP_START;
+    
+    _STACK_SIZE = 1024;
+    _STACK_BEGIN = ORIGIN(RAM) + LENGTH(RAM);
+    _STACK_END =  _STACK_BEGIN - _STACK_SIZE;
+    
+    .stack : ALIGN(4)
+    {
+        *(.stack)
+    } > RAM
 }
 
+ENTRY(reset_handler)
