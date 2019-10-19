@@ -1,8 +1,8 @@
 extern unsigned int _DATA_ROM_START;
 extern unsigned int _DATA_RAM_START;
 extern unsigned int _DATA_RAM_END;
-extern unsigned int _BSS_START;
-extern unsigned int _BSS_END;
+extern unsigned int __bss_start__;
+extern unsigned int __bss_end__;
 
 #define STACK_TOP 0x20005000
 void startup();
@@ -34,8 +34,8 @@ void startup()
 
     /* Initialize data in the `.bss` section to zeros.
      */
-    unsigned int * bss_start_p = &_BSS_START; 
-    unsigned int * bss_end_p = &_BSS_END;
+    unsigned int * bss_start_p = &__bss_start__; 
+    unsigned int * bss_end_p = &__bss_end__;
 
     while(bss_start_p != bss_end_p)
     {
