@@ -9,6 +9,8 @@ SCRIPT_PATH := scripts
 
 CC := arm-none-eabi-gcc
 LD := arm-none-eabi-ld
+OBJ_COPY := arm-none-eabi-objcopy
+
 CFLAGS += -g -O0 -mthumb -Wall -Wextra -pedantic
 
 EXECUTABLE := home_management_system
@@ -36,11 +38,13 @@ $(BIN): $(OBJECTS) $(ASM_OBJECTS)
 	@mkdir -p $(BIN_PATH)
 	@echo "Linking $(BIN)..."
 ifdef LIB
-	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN) $(LIB)
+	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN).elf $(LIB)
 else
-	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN)
+	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN).elf
 endif
 	@echo "Linking done"
+	$(OBJ_COPY) -O binary $(BIN_PATH)/$(EXECUTABLE).elf $(BIN_PATH)/$(EXECUTABLE).bin 
+	@echo "Build done"
 
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT) #$(SRC_PATH)/%.$(ASM_EXT)
 	@mkdir -p $(BUILD_PATH)
