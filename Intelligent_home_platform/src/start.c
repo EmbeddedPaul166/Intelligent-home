@@ -12,7 +12,7 @@ extern unsigned int _STACK_END;
 
 extern void main();
 
-void reset_handler()
+void Reset_Handler()
 {
     /* Copy data belonging to the `.data` section from its
      * load time position on flash (ROM) to its run time position

@@ -60,7 +60,7 @@ SECTIONS
     _HEAP_END =.;
     _HEAP_SIZE = _HEAP_END - _HEAP_START;
     
-    _STACK_SIZE = 1024;
+    _STACK_SIZE = 0xc00;
     _STACK_BEGIN = ORIGIN(RAM) + LENGTH(RAM);
     _STACK_END =  _STACK_BEGIN - _STACK_SIZE;
     
@@ -70,4 +70,4 @@ SECTIONS
     } > RAM
 }
 
-ENTRY(reset_handler)
+ENTRY(Reset_Handler)
