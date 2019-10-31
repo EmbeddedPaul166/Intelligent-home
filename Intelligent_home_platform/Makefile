@@ -36,16 +36,12 @@ LIB_OBJECTS := $(patsubst $(LIBRARY_SRC_PATH)/%, $(BUILD_PATH)/%, $(LIB_SOURCES:
 
 INC := -I $(INC_PATH) -I $(LIBRARY_INC_PATH) 
 
-LIB := -L /usr/local/lib
+LIB := lib/static_libraries/libc.a
 
 $(BIN): $(OBJECTS) $(LIB_OBJECTS) $(ASM_OBJECTS)
 	@mkdir -p $(BIN_PATH)
 	@echo "Linking $(BIN)..."
-ifdef LIB
 	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN).elf $(LIB)
-else
-	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN).elf
-endif
 	@echo "Linking done"
 	$(OBJ_COPY) -O binary $(BIN_PATH)/$(EXECUTABLE).elf $(BIN_PATH)/$(EXECUTABLE).bin 
 	@echo "Build done"
