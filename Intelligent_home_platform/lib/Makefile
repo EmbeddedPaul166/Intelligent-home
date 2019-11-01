@@ -9,7 +9,7 @@ BUILD_PATH := ../build
 
 CC := arm-none-eabi-gcc
 
-CFLAGS += -g -mthumb -mcpu=cortex-m3 -Wall -Wextra -pedantic
+CFLAGS += -g -O0 -mthumb -mcpu=cortex-m3 --specs=nosys.specs -Wall -Wextra -pedantic
 
 SRC_EXT := c
 SOURCES := $(shell find $(LIBRARY_SRC_PATH)/ -type f -name *.$(SRC_EXT))
@@ -22,6 +22,6 @@ all: $(OBJECTS)
 $(BUILD_PATH)/%.o: $(LIBRARY_SRC_PATH)/%.$(SRC_EXT)  
 	@echo "Compiling library sources..."
 	$(CC) -c $(CFLAGS) $(INC) $< -o $@
-	
+	@echo ""
 	
 	

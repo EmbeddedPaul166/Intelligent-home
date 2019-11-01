@@ -8,13 +8,12 @@ LIBRARY_SRC_PATH := lib/src
 LIBRARY_INC_PATH := lib/include
 BUILD_PATH := build
 BIN_PATH := bin
-SCRIPT_PATH := scripts
+SCRIPT_PATH := ld
 
 CC := arm-none-eabi-gcc
-LD := arm-none-eabi-ld
 OBJ_COPY := arm-none-eabi-objcopy
 
-CFLAGS += -g -mthumb -mcpu=cortex-m3 -Wall -Wextra -pedantic
+CFLAGS += -g -O0 -mthumb -mcpu=cortex-m3 --specs=nosys.specs -Wall -Wextra -pedantic
 
 EXECUTABLE := home_management_system
 SCRIPT := linker.ld
@@ -36,25 +35,26 @@ LIB_OBJECTS := $(patsubst $(LIBRARY_SRC_PATH)/%, $(BUILD_PATH)/%, $(LIB_SOURCES:
 
 INC := -I $(INC_PATH) -I $(LIBRARY_INC_PATH) 
 
-LIB := lib/static_libraries/libc.a
-
 $(BIN): $(OBJECTS) $(LIB_OBJECTS) $(ASM_OBJECTS)
-	@mkdir -p $(BIN_PATH)
+	@mkdir -p $(BIN_PATH)	
 	@echo "Linking $(BIN)..."
-	$(LD) $^ -T $(LD_SCRIPT) -o $(BIN).elf $(LIB)
+	$(CC) $^ -T $(LD_SCRIPT) $(CFLAGS) -o $(BIN).elf	
 	@echo "Linking done"
-	$(OBJ_COPY) -O binary $(BIN_PATH)/$(EXECUTABLE).elf $(BIN_PATH)/$(EXECUTABLE).bin 
+	@echo ""
+	$(OBJ_COPY) -O binary $(BIN_PATH)/$(EXECUTABLE).elf $(BIN_PATH)/$(EXECUTABLE).bin
 	@echo "Build done"
 
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_C_EXT) 
 	@mkdir -p $(BUILD_PATH)
 	@echo "Compiling $<..."
 	$(CC) -c $(CFLAGS) $(INC) $< -o $@
+	@echo ""
 
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_ASM_EXT)
 	@mkdir -p $(BUILD_PATH)
 	@echo "Compiling $<..."
 	$(CC) -c $(CFLAGS) $(INC) $< -o $@
+	@echo ""
 
 $(BUILD_PATH)/%.o:
 	+$(MAKE) -C lib
