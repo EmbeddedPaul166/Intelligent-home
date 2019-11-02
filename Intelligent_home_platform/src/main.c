@@ -1,18 +1,24 @@
 #include "main.h"
 
+static void setupHardware(void);
+static void systemClockConfig(void);
+static void adcConfig(void);
+static void errorHandlerSetup(void);
+static void errorHandler(void);
+
+static volatile int adcRead[ADC_BUFFER_SIZE];
+static volatile int temperatureRead;
+static volatile int lightIntensityRead;
+static volatile int soundIntensityRead;
+
+ADC_HandleTypeDef adcHandle;
+
 int main()
 {
     setupHardware();    
     while (1)
     {
-        if (HAL_ADC_Start_DMA(&adcHandle, (uint32_t *)adcRead, ADC_BUFFER_SIZE) != HAL_OK)
-        {
-            errorHandler();
-        }
-        //Modify below to add calculations of real values
-        temperatureRead = adcRead[0]; 
-        lightIntensityRead = adcRead[1]; 
-        soundIntensityRead = adcRead[2]; 
+        
     }
     return 0;
 }
@@ -20,13 +26,9 @@ int main()
 static void setupHardware(void)
 {
     HAL_Init();
-    systemClockConfig();   
     errorHandlerSetup();
+    systemClockConfig();    
     adcConfig();
-    if (HAL_ADC_Start(&adcHandle) != HAL_OK)
-    {
-        errorHandler();
-    }
 }
 
 static void errorHandlerSetup(void)
@@ -73,47 +75,54 @@ static void systemClockConfig(void)
 
 static void adcConfig(void)
 {
-    ADC_ChannelConfTypeDef   channel0Config; //A0
-    ADC_ChannelConfTypeDef   channel1Config; //A1
-    ADC_ChannelConfTypeDef   channel4Config; //A2
+    ADC_ChannelConfTypeDef channelConfig;
 
-    adcHandle.Instance = ADC1;
-    
+    adcHandle.Instance = ADC1; 
     adcHandle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
     adcHandle.Init.ScanConvMode = ADC_SCAN_ENABLE;              
     adcHandle.Init.ContinuousConvMode = ENABLE;                       
     adcHandle.Init.NbrOfConversion = 3;                             
-    adcHandle.Init.DiscontinuousConvMode = DISABLE;                       
-    adcHandle.Init.NbrOfDiscConversion = 0;                             
+    adcHandle.Init.DiscontinuousConvMode = DISABLE;                                                    
     adcHandle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     if (HAL_ADC_Init(&adcHandle) != HAL_OK)
     {
         errorHandler();
     }
 
-    channel0Config.Channel      = ADC_CHANNEL_0;
-    channel0Config.Rank         = ADC_REGULAR_RANK_1;
-    channel0Config.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&adcHandle, &channel0Config) != HAL_OK)
+    channelConfig.Channel      = ADC_CHANNEL_0; //A0
+    channelConfig.Rank         = ADC_REGULAR_RANK_1;
+    channelConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();
     }
     
-    channel1Config.Channel      = ADC_CHANNEL_1;
-    channel1Config.Rank         = ADC_REGULAR_RANK_2;
-    channel1Config.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&adcHandle, &channel1Config) != HAL_OK)
+    channelConfig.Channel      = ADC_CHANNEL_1; //A1
+    channelConfig.Rank         = ADC_REGULAR_RANK_2;
+    channelConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();
     }
 
-    channel4Config.Channel      = ADC_CHANNEL_4;
-    channel4Config.Rank         = ADC_REGULAR_RANK_3;
-    channel4Config.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&adcHandle, &channel4Config) != HAL_OK)
+    channelConfig.Channel      = ADC_CHANNEL_4; //A2
+    channelConfig.Rank         = ADC_REGULAR_RANK_3;
+    channelConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();
     }
+    
+    if (HAL_ADC_Start_DMA(&adcHandle, (uint32_t *)adcRead, ADC_BUFFER_SIZE) != HAL_OK)
+    {
+        errorHandler();
+    }
+    
+    if (HAL_ADC_Start(&adcHandle) != HAL_OK)
+    {
+        errorHandler();
+    }
+
 }
 
 static void errorHandler(void)
@@ -125,6 +134,21 @@ static void errorHandler(void)
     }
 }
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    temperatureRead = adcRead[0]; 
+    lightIntensityRead = adcRead[1]; 
+    soundIntensityRead = adcRead[2];
+}
 
+void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc)
+{
+    errorHandler();
+}
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    
+}
 
 
