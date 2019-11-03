@@ -6,7 +6,7 @@ static void adcConfig(void);
 static void errorHandlerSetup(void);
 static void errorHandler(void);
 
-static volatile int adcRead[ADC_BUFFER_SIZE];
+static volatile uint32_t adcRead[ADC_BUFFER_SIZE] = {0, 0, 0};
 static volatile int temperatureRead;
 static volatile int lightIntensityRead;
 static volatile int soundIntensityRead;
@@ -45,18 +45,15 @@ static void errorHandlerSetup(void)
 
 static void systemClockConfig(void)
 {
-    RCC_ClkInitTypeDef clkInitStruct = {0};
-    RCC_OscInitTypeDef oscillatorInitStruct = {0};
+    RCC_ClkInitTypeDef clkInitStruct;
+    RCC_OscInitTypeDef oscillatorInitStruct;
 
-    oscillatorInitStruct.OscillatorType  = RCC_OSCILLATORTYPE_HSI;
-    oscillatorInitStruct.HSEState        = RCC_HSE_OFF;
-    oscillatorInitStruct.LSEState        = RCC_LSE_OFF;
-    oscillatorInitStruct.HSIState        = RCC_HSI_ON;
-    oscillatorInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+    oscillatorInitStruct.OscillatorType  = RCC_OSCILLATORTYPE_HSE;
+    oscillatorInitStruct.HSEState        = RCC_HSE_ON;
     oscillatorInitStruct.HSEPredivValue    = RCC_HSE_PREDIV_DIV1;
     oscillatorInitStruct.PLL.PLLState    = RCC_PLL_ON;
-    oscillatorInitStruct.PLL.PLLSource   = RCC_PLLSOURCE_HSI_DIV2;
-    oscillatorInitStruct.PLL.PLLMUL      = RCC_PLL_MUL16;
+    oscillatorInitStruct.PLL.PLLSource   = RCC_PLLSOURCE_HSE;
+    oscillatorInitStruct.PLL.PLLMUL      = RCC_PLL_MUL9;
     if (HAL_RCC_OscConfig(&oscillatorInitStruct)!= HAL_OK)
     {
         errorHandler(); 
@@ -91,7 +88,7 @@ static void adcConfig(void)
 
     channelConfig.Channel      = ADC_CHANNEL_0; //A0
     channelConfig.Rank         = ADC_REGULAR_RANK_1;
-    channelConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+    channelConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
     if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();
@@ -99,7 +96,6 @@ static void adcConfig(void)
     
     channelConfig.Channel      = ADC_CHANNEL_1; //A1
     channelConfig.Rank         = ADC_REGULAR_RANK_2;
-    channelConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
     if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();
@@ -107,22 +103,15 @@ static void adcConfig(void)
 
     channelConfig.Channel      = ADC_CHANNEL_4; //A2
     channelConfig.Rank         = ADC_REGULAR_RANK_3;
-    channelConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
     if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();
     }
     
-    if (HAL_ADC_Start_DMA(&adcHandle, (uint32_t *)adcRead, ADC_BUFFER_SIZE) != HAL_OK)
+    if (HAL_ADC_Start_DMA(&adcHandle, &adcRead, ADC_BUFFER_SIZE) != HAL_OK)
     {
         errorHandler();
     }
-    
-    if (HAL_ADC_Start(&adcHandle) != HAL_OK)
-    {
-        errorHandler();
-    }
-
 }
 
 static void errorHandler(void)

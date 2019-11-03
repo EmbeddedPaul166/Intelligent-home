@@ -2,41 +2,34 @@
 
 void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 {
-    GPIO_InitTypeDef GPIO_InitStruct;
-    static DMA_HandleTypeDef DmaHandle;
-    RCC_PeriphCLKInitTypeDef PeriphClkInit;
+    static DMA_HandleTypeDef dmaHandle;
+    GPIO_InitTypeDef gpioInitStruct;
+    RCC_PeriphCLKInitTypeDef peripheralClkInit;
     
-    __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_ADC1_CLK_ENABLE();
+    peripheralClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+    peripheralClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+    HAL_RCCEx_PeriphCLKConfig(&peripheralClkInit); 
     
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-    PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
-    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
-    
+    __HAL_RCC_GPIOA_CLK_ENABLE(); 
     __HAL_RCC_DMA1_CLK_ENABLE();
     
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    gpioInitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4;
+    gpioInitStruct.Mode = GPIO_MODE_ANALOG;
+    //gpioInitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &gpioInitStruct);
     
-    DmaHandle.Instance = DMA1_Channel1;
-    DmaHandle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-    DmaHandle.Init.PeriphInc           = DMA_PINC_DISABLE;
-    DmaHandle.Init.MemInc              = DMA_MINC_ENABLE;
-    DmaHandle.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;   
-    DmaHandle.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;   
-    DmaHandle.Init.Mode                = DMA_CIRCULAR;              
-    DmaHandle.Init.Priority            = DMA_PRIORITY_HIGH;
+    dmaHandle.Instance = DMA1_Channel1;
+    dmaHandle.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    dmaHandle.Init.PeriphInc = DMA_PINC_DISABLE;
+    dmaHandle.Init.MemInc = DMA_MINC_ENABLE;
+    dmaHandle.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;   
+    dmaHandle.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;   
+    dmaHandle.Init.Mode = DMA_CIRCULAR;              
+    dmaHandle.Init.Priority = DMA_PRIORITY_HIGH;
+    HAL_DMA_Init(&dmaHandle);
+    __HAL_LINKDMA(hadc, DMA_Handle, dmaHandle);
 
-    HAL_DMA_DeInit(&DmaHandle);
-    HAL_DMA_Init(&DmaHandle);
-
-    __HAL_LINKDMA(hadc, DMA_Handle, DmaHandle);
-
-    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 1, 0);
+    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-
-    HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
 }
