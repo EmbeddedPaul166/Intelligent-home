@@ -16,7 +16,6 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
     
     gpioInitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4;
     gpioInitStruct.Mode = GPIO_MODE_ANALOG;
-    //gpioInitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &gpioInitStruct);
     
     dmaHandle.Instance = DMA1_Channel1;
@@ -32,4 +31,49 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 
     HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+}
+
+void HAL_UART_MspInit(UART_HandleTypeDef* huart)
+{
+    GPIO_InitTypeDef gpioInitStruct = {0};
+    if (huart->Instance == USART2)
+    {
+        __HAL_RCC_USART2_CLK_ENABLE();
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_DMA1_CLK_ENABLE();
+        
+        gpioInitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3;
+        gpioInitStruct.Mode = GPIO_MODE_AF_PP;
+        gpioInitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        HAL_GPIO_Init(GPIOA, &gpioInitStruct);
+        
+        dmaUart2HandleRx.Instance = DMA1_Channel6;
+        dmaUart2HandleRx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+        dmaUart2HandleRx.Init.PeriphInc = DMA_PINC_DISABLE;
+        dmaUart2HandleRx.Init.MemInc = DMA_MINC_ENABLE;
+        dmaUart2HandleRx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+        dmaUart2HandleRx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+        dmaUart2HandleRx.Init.Mode = DMA_CIRCULAR;
+        dmaUart2HandleRx.Init.Priority = DMA_PRIORITY_HIGH;
+        HAL_DMA_Init(&dmaUart2HandleRx);
+        __HAL_LINKDMA(huart,hdmarx,dmaUart2HandleRx);
+        
+        dmaUart2HandleTx.Instance = DMA1_Channel7;
+        dmaUart2HandleTx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+        dmaUart2HandleTx.Init.PeriphInc = DMA_PINC_DISABLE;
+        dmaUart2HandleTx.Init.MemInc = DMA_MINC_ENABLE;
+        dmaUart2HandleTx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+        dmaUart2HandleTx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+        dmaUart2HandleTx.Init.Mode = DMA_NORMAL;
+        dmaUart2HandleTx.Init.Priority = DMA_PRIORITY_HIGH;
+        HAL_DMA_Init(&dmaUart2HandleTx);
+        __HAL_LINKDMA(huart,hdmatx,dmaUart2HandleTx);
+        
+        HAL_NVIC_SetPriority(USART2_IRQn, 1, 0);
+        HAL_NVIC_EnableIRQ(USART2_IRQn);
+        HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0); 
+        HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+        HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0); 
+        HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+    }
 }

@@ -3,32 +3,82 @@
 static void setupHardware(void);
 static void systemClockConfig(void);
 static void adcConfig(void);
+static void usartSetup(void);
 static void errorHandlerSetup(void);
 static void errorHandler(void);
+static void transmitTemperatureRead(void);
+static void transmitLightIntensityRead(void);
+static void transmitSoundIntensityRead(void);
 
-static volatile uint32_t adcRead[ADC_BUFFER_SIZE] = {0, 0, 0};
-static volatile int temperatureRead;
-static volatile int lightIntensityRead;
-static volatile int soundIntensityRead;
-
-ADC_HandleTypeDef adcHandle;
+static uint32_t adcRead[ADC_BUFFER_SIZE];
+static uint32_t uartTxBuffer[UART_TX_BUFFER_SIZE];
+static uint8_t uartRxBuffer;
 
 int main()
 {
     setupHardware();    
     while (1)
     {
-        
+        if (uartRxBuffer == 0x74)
+        {
+            uartRxBuffer = 0;
+            transmitTemperatureRead();
+        }
+        else if (uartRxBuffer == 0x6C) 
+        {
+            uartRxBuffer = 0;
+            transmitLightIntensityRead();
+        } 
+        else if (uartRxBuffer == 0x73) 
+        {
+            uartRxBuffer = 0;
+            transmitSoundIntensityRead();
+        }
+        //temperatureInCelsius = 1.0/(log(1023.0/(float)temperatureRead-1.0)/4275.0+1.0/298.15)-273.15;
+        //lightIntensityInLux = exp((float)lightIntensityRead/80.0);
+        //soundIntensityInDB = 20.0*log(lightIntensityRead);
     }
     return 0;
+}
+
+
+static void transmitTemperatureRead()
+{
+    uartTxBuffer[0] =  (uint8_t)(temperatureRead & 0xFF); //*((unsigned char*) & temperatureRead);
+    uartTxBuffer[1] =  (uint8_t)((temperatureRead >> 8) & 0xFF); //*((unsigned char*)((&temperatureRead)+1));
+    if (HAL_UART_Transmit_DMA(&uartHandle, (uint8_t*)uartTxBuffer, UART_TX_BUFFER_SIZE) != HAL_OK)
+    {
+        errorHandler();
+    }
+}
+
+static void transmitLightIntensityRead()
+{
+    uartTxBuffer[0] =   (uint8_t)(lightIntensityRead & 0xFF);
+    uartTxBuffer[1] =   (uint8_t)((lightIntensityRead >> 8) & 0xFF);
+    if (HAL_UART_Transmit_DMA(&uartHandle, (uint8_t*)uartTxBuffer, UART_TX_BUFFER_SIZE) != HAL_OK)
+    {
+        errorHandler();
+    }
+}
+
+static void transmitSoundIntensityRead()
+{
+    uartTxBuffer[0] =   (uint8_t)(soundIntensityRead & 0xFF);
+    uartTxBuffer[1] =   (uint8_t)((soundIntensityRead >> 8) & 0xFF);
+    if (HAL_UART_Transmit_DMA(&uartHandle, (uint8_t*)uartTxBuffer, UART_TX_BUFFER_SIZE) != HAL_OK)
+    {
+        errorHandler();
+    }
 }
 
 static void setupHardware(void)
 {
     HAL_Init();
     errorHandlerSetup();
-    systemClockConfig();    
+    systemClockConfig();
     adcConfig();
+    usartSetup();
 }
 
 static void errorHandlerSetup(void)
@@ -108,7 +158,27 @@ static void adcConfig(void)
         errorHandler();
     }
     
-    if (HAL_ADC_Start_DMA(&adcHandle, &adcRead, ADC_BUFFER_SIZE) != HAL_OK)
+    if (HAL_ADC_Start_DMA(&adcHandle, (uint32_t*)adcRead, ADC_BUFFER_SIZE) != HAL_OK)
+    {
+        errorHandler();
+    }
+}
+
+static void usartSetup(void)
+{
+    uartHandle.Instance = USART2;
+    uartHandle.Init.BaudRate = 115200;
+    uartHandle.Init.WordLength = UART_WORDLENGTH_9B;
+    uartHandle.Init.StopBits = UART_STOPBITS_1;
+    uartHandle.Init.Parity = UART_PARITY_NONE;
+    uartHandle.Init.Mode = UART_MODE_TX_RX;
+    uartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    uartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
+    if (HAL_UART_Init(&uartHandle) != HAL_OK)
+    {
+        errorHandler();
+    }
+    if (HAL_UART_Receive_DMA(&uartHandle, &uartRxBuffer, 1) != HAL_OK)
     {
         errorHandler();
     }
@@ -127,17 +197,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     temperatureRead = adcRead[0]; 
     lightIntensityRead = adcRead[1]; 
-    soundIntensityRead = adcRead[2];
+    soundIntensityRead = adcRead[2]; 
 }
 
 void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc)
 {
     errorHandler();
-}
-
-void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
-{
-    
 }
 
 
