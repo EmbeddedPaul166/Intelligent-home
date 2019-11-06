@@ -4,11 +4,20 @@ static void setupHardware(void);
 static void systemClockConfig(void);
 static void adcConfig(void);
 static void usartSetup(void);
+static void gpioSetup(void);
 static void errorHandlerSetup(void);
 static void errorHandler(void);
 static void transmitTemperatureRead(void);
 static void transmitLightIntensityRead(void);
 static void transmitSoundIntensityRead(void);
+static void heatingOn(void);
+static void coolingOn(void);
+static void temperatureRegulationOff(void);
+static void lightsOn(void);
+static void lightsOff(void);
+static void alarmOn(void);
+static void alarmOff(void);
+
 
 static uint32_t adcRead[ADC_BUFFER_SIZE];
 static uint32_t uartTxBuffer[UART_TX_BUFFER_SIZE];
@@ -16,7 +25,9 @@ static uint8_t uartRxBuffer;
 
 int main()
 {
-    setupHardware();    
+    setupHardware();
+    HAL_Delay(1000);
+    
     while (1)
     {
         if (uartRxBuffer == 0x74)
@@ -34,13 +45,96 @@ int main()
             uartRxBuffer = 0;
             transmitSoundIntensityRead();
         }
-        //temperatureInCelsius = 1.0/(log(1023.0/(float)temperatureRead-1.0)/4275.0+1.0/298.15)-273.15;
-        //lightIntensityInLux = exp((float)lightIntensityRead/80.0);
-        //soundIntensityInDB = 20.0*log(lightIntensityRead);
+        float resistance = (float)(MAXIMUM_ADC_VALUE-(float)temperatureRead)*10000.0/(float)temperatureRead;
+        temperatureInCelsius = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
+        lightIntensityPercentege = ((float)lightIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
+        soundIntensityPercentege = ((float)soundIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
+        
+        if (tresholdDirection == 0)
+        {
+            resistance = (float)(MAXIMUM_ADC_VALUE-(float)tresholdRead)*10000.0/(float)tresholdRead;
+            temperatureInCelsiusTreshold = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
+        }
+        else if (tresholdDirection == 1)
+        {
+            lightIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+        }
+        else if (tresholdDirection == 2)
+        {
+            soundIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+        }
+        
+        if (temperatureInCelsius > temperatureInCelsiusTreshold + 1.0)
+        {
+            coolingOn();
+        }
+        else if (temperatureInCelsius < temperatureInCelsiusTreshold - 1.0)
+        {
+            heatingOn();
+        }
+        else
+        {
+            temperatureRegulationOff();
+        }
+        
+        if (lightIntensityPercentege < lightIntensityPercentegeTreshold)
+        {
+            lightsOn();
+        }
+        else
+        {
+            lightsOff();
+        }
+        
+        if (soundIntensityPercentege < soundIntensityPercentegeTreshold)
+        {
+            alarmOff();
+        }
+        else
+        {
+            lightsOn();
+        }
     }
     return 0;
 }
 
+
+static void heatingOn(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+}
+
+static void coolingOn(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+}
+static void temperatureRegulationOff(void)
+{
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
+    HAL_Delay(300);
+}
+
+static void lightsOn(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+}
+
+static void lightsOff(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+}
+
+
+static void alarmOn(void)
+{
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+}
+
+
+static void alarmOff(void)
+{
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+}
 
 static void transmitTemperatureRead()
 {
@@ -79,6 +173,35 @@ static void setupHardware(void)
     systemClockConfig();
     adcConfig();
     usartSetup();
+    gpioSetup();
+}
+
+static void gpioSetup(void)
+{ 
+    GPIO_InitTypeDef gpioInitStruct;
+    
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    gpioInitStruct.Pin = GPIO_PIN_9;
+    gpioInitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    gpioInitStruct.Pull = GPIO_NOPULL;
+    gpioInitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA, &gpioInitStruct);
+    
+    gpioInitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_5;
+    gpioInitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    gpioInitStruct.Pull = GPIO_NOPULL;
+    gpioInitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB, &gpioInitStruct);
+    
+    gpioInitStruct.Pin = GPIO_PIN_4;
+    gpioInitStruct.Mode = GPIO_MODE_IT_RISING;
+    gpioInitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &gpioInitStruct);
+    
+    HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0); 
+    HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 }
 
 static void errorHandlerSetup(void)
@@ -158,6 +281,13 @@ static void adcConfig(void)
         errorHandler();
     }
     
+    channelConfig.Channel      = ADC_CHANNEL_8; //A3
+    channelConfig.Rank         = ADC_REGULAR_RANK_3;
+    if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
+    {
+        errorHandler();
+    }   
+    
     if (HAL_ADC_Start_DMA(&adcHandle, (uint32_t*)adcRead, ADC_BUFFER_SIZE) != HAL_OK)
     {
         errorHandler();
@@ -198,6 +328,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     temperatureRead = adcRead[0]; 
     lightIntensityRead = adcRead[1]; 
     soundIntensityRead = adcRead[2]; 
+    tresholdRead = adcRead[3];
 }
 
 void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc)

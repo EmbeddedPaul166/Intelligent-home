@@ -18,12 +18,17 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
     peripheralClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
     HAL_RCCEx_PeriphCLKConfig(&peripheralClkInit); 
     
-    __HAL_RCC_GPIOA_CLK_ENABLE(); 
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_DMA1_CLK_ENABLE();
     
-    gpioInitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4;
+    gpioInitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4; //A0, A1, A2
     gpioInitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOA, &gpioInitStruct);
+    
+    gpioInitStruct.Pin = GPIO_PIN_0; //A3
+    gpioInitStruct.Mode = GPIO_MODE_ANALOG;
+    HAL_GPIO_Init(GPIOB, &gpioInitStruct);
     
     dmaHandle.Instance = DMA1_Channel1;
     dmaHandle.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -46,6 +51,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     {
         __HAL_RCC_ADC1_CLK_DISABLE();
         HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4);
+        HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
         HAL_DMA_DeInit(hadc->DMA_Handle);
     }
 }

@@ -25,3 +25,16 @@ void DMA1_Channel7_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&dmaUart2HandleTx);
 }
+
+void EXTI4_IRQHandler(void)
+{
+    if (tresholdDirection < 2 && tresholdDirection >= 0)
+    {
+        tresholdDirection++;
+    }
+    else
+    {
+        tresholdDirection = 0;
+    }
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+}
