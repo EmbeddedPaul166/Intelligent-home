@@ -1,39 +1,5 @@
 #include "main.h"
 
-static void setupHardware(void);
-static void systemClockConfig(void);
-static void adcConfig(void);
-static void usartSetup(void);
-static void gpioSetup(void);
-static void errorHandlerSetup(void);
-static void errorHandler(void);
-static void transmitTemperatureRead(void);
-static void transmitLightIntensityRead(void);
-static void transmitSoundIntensityRead(void);
-static void heatingOn(void);
-static void coolingOn(void);
-static void temperatureRegulationOff(void);
-static void lightsOn(void);
-static void lightsOff(void);
-static void alarmOn(void);
-static void alarmOff(void);
-
-
-static uint32_t adcRead[ADC_BUFFER_SIZE];
-static uint32_t uartTxBuffer[UART_TX_BUFFER_SIZE];
-static uint8_t uartRxBuffer;
-
-/* Pinout:
- * A0 - temperature sensor
- * A1 - light sensor
- * A2 - sound sensor
- * A3 - potentiometer
- * D5 - button
- * D6 - red LED
- * D8 - blue LED
- * D4 - green LED
- */
-
 int main()
 {
     setupHardware();
@@ -109,44 +75,45 @@ int main()
 }
 
 
-static void heatingOn(void)
+void heatingOn(void)
 {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
 }
 
-static void coolingOn(void)
+void coolingOn(void)
 {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
 }
-static void temperatureRegulationOff(void)
+
+void temperatureRegulationOff(void)
 {
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
     HAL_Delay(300);
 }
 
-static void lightsOn(void)
+void lightsOn(void)
 {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
 }
 
-static void lightsOff(void)
+void lightsOff(void)
 {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
 
-static void alarmOn(void)
+void alarmOn(void)
 {
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 }
 
 
-static void alarmOff(void)
+void alarmOff(void)
 {
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 }
 
-static void transmitTemperatureRead()
+void transmitTemperatureRead()
 {
     uartTxBuffer[0] =  (uint8_t)(temperatureRead & 0xFF); //*((unsigned char*) & temperatureRead);
     uartTxBuffer[1] =  (uint8_t)((temperatureRead >> 8) & 0xFF); //*((unsigned char*)((&temperatureRead)+1));
@@ -156,7 +123,7 @@ static void transmitTemperatureRead()
     }
 }
 
-static void transmitLightIntensityRead()
+void transmitLightIntensityRead()
 {
     uartTxBuffer[0] =   (uint8_t)(lightIntensityRead & 0xFF);
     uartTxBuffer[1] =   (uint8_t)((lightIntensityRead >> 8) & 0xFF);
@@ -166,7 +133,7 @@ static void transmitLightIntensityRead()
     }
 }
 
-static void transmitSoundIntensityRead()
+void transmitSoundIntensityRead()
 {
     uartTxBuffer[0] =   (uint8_t)(soundIntensityRead & 0xFF);
     uartTxBuffer[1] =   (uint8_t)((soundIntensityRead >> 8) & 0xFF);
@@ -176,7 +143,7 @@ static void transmitSoundIntensityRead()
     }
 }
 
-static void setupHardware(void)
+void setupHardware(void)
 {
     HAL_Init();
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -190,7 +157,7 @@ static void setupHardware(void)
     gpioSetup();
 }
 
-static void gpioSetup(void)
+void gpioSetup(void)
 { 
     GPIO_InitTypeDef gpioInitStruct;
     gpioInitStruct.Pin = GPIO_PIN_9;
@@ -217,9 +184,9 @@ static void gpioSetup(void)
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10 | GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
-static void errorHandlerSetup(void)
+void errorHandlerSetup(void)
 {
-    static GPIO_InitTypeDef  gpioInitStruct;
+     GPIO_InitTypeDef  gpioInitStruct;
     
     LED2_GPIO_CLK_ENABLE();
     gpioInitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -229,7 +196,7 @@ static void errorHandlerSetup(void)
     HAL_GPIO_Init(LED2_GPIO_PORT, &gpioInitStruct); 
 }
 
-static void systemClockConfig(void)
+void systemClockConfig(void)
 {
     RCC_ClkInitTypeDef clkInitStruct;
     RCC_OscInitTypeDef oscillatorInitStruct;
@@ -256,7 +223,7 @@ static void systemClockConfig(void)
     }
 }
 
-static void adcConfig(void)
+void adcConfig(void)
 {
     ADC_ChannelConfTypeDef channelConfig;
 
@@ -307,7 +274,7 @@ static void adcConfig(void)
     }
 }
 
-static void usartSetup(void)
+void usartSetup(void)
 {
     uartHandle.Instance = USART2;
     uartHandle.Init.BaudRate = 115200;
@@ -327,7 +294,7 @@ static void usartSetup(void)
     }
 }
 
-static void errorHandler(void)
+void errorHandler(void)
 {
     while(1)
     {
