@@ -8,36 +8,30 @@ int main()
     {
         if (uartRxBuffer == 0x74)
         {
-            uartRxBuffer = 0;
             transmitTemperatureRead();
         }
         else if (uartRxBuffer == 0x6C) 
         {
-            uartRxBuffer = 0;
             transmitLightIntensityRead();
         } 
         else if (uartRxBuffer == 0x73) 
         {
-            uartRxBuffer = 0;
             transmitSoundIntensityRead();
         }
-        float resistance = (float)(MAXIMUM_ADC_VALUE-(float)temperatureRead)*10000.0/(float)temperatureRead;
-        temperatureInCelsius = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
-        lightIntensityPercentege = ((float)lightIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
-        soundIntensityPercentege = ((float)soundIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
+        
+        convertSensorMeasurements();
         
         if (tresholdDirection == 0)
         {
-            resistance = (float)(MAXIMUM_ADC_VALUE-(float)tresholdRead)*10000.0/(float)tresholdRead;
-            temperatureInCelsiusTreshold = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
+            setTemperatureTreshold();
         }
         else if (tresholdDirection == 1)
         {
-            lightIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+            setLightIntensityTreshold();
         }
         else if (tresholdDirection == 2)
         {
-            soundIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+            setSoundIntensityTreshold();
         }
         
         if (temperatureInCelsius > temperatureInCelsiusTreshold + 1.0)
@@ -74,6 +68,30 @@ int main()
     return 0;
 }
 
+
+void convertSensorMeasurements(void)
+{
+    float resistance = (float)(MAXIMUM_ADC_VALUE-(float)temperatureRead)*10000.0/(float)temperatureRead;
+    temperatureInCelsius = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
+    lightIntensityPercentege = ((float)lightIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
+    soundIntensityPercentege = ((float)soundIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
+}
+
+void setTemperatureTreshold(void)
+{
+    float resistance = (float)(MAXIMUM_ADC_VALUE-(float)tresholdRead)*10000.0/(float)tresholdRead;
+    temperatureInCelsiusTreshold = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
+}
+
+void setLightIntensityTreshold(void)
+{
+    lightIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+}
+
+void setSoundIntensityTreshold(void)
+{
+    soundIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+}
 
 void heatingOn(void)
 {
@@ -115,6 +133,7 @@ void alarmOff(void)
 
 void transmitTemperatureRead()
 {
+    uartRxBuffer = 0;
     uartTxBuffer[0] =  (uint8_t)(temperatureRead & 0xFF); //*((unsigned char*) & temperatureRead);
     uartTxBuffer[1] =  (uint8_t)((temperatureRead >> 8) & 0xFF); //*((unsigned char*)((&temperatureRead)+1));
     if (HAL_UART_Transmit_DMA(&uartHandle, (uint8_t*)uartTxBuffer, UART_TX_BUFFER_SIZE) != HAL_OK)
@@ -125,6 +144,7 @@ void transmitTemperatureRead()
 
 void transmitLightIntensityRead()
 {
+    uartRxBuffer = 0;
     uartTxBuffer[0] =   (uint8_t)(lightIntensityRead & 0xFF);
     uartTxBuffer[1] =   (uint8_t)((lightIntensityRead >> 8) & 0xFF);
     if (HAL_UART_Transmit_DMA(&uartHandle, (uint8_t*)uartTxBuffer, UART_TX_BUFFER_SIZE) != HAL_OK)
@@ -135,6 +155,7 @@ void transmitLightIntensityRead()
 
 void transmitSoundIntensityRead()
 {
+    uartRxBuffer = 0;
     uartTxBuffer[0] =   (uint8_t)(soundIntensityRead & 0xFF);
     uartTxBuffer[1] =   (uint8_t)((soundIntensityRead >> 8) & 0xFF);
     if (HAL_UART_Transmit_DMA(&uartHandle, (uint8_t*)uartTxBuffer, UART_TX_BUFFER_SIZE) != HAL_OK)
