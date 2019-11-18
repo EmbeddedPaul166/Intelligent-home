@@ -23,11 +23,21 @@ static uint32_t adcRead[ADC_BUFFER_SIZE];
 static uint32_t uartTxBuffer[UART_TX_BUFFER_SIZE];
 static uint8_t uartRxBuffer;
 
+/* Pinout:
+ * A0 - temperature sensor
+ * A1 - light sensor
+ * A2 - sound sensor
+ * A3 - potentiometer
+ * D5 - button
+ * D6 - red LED
+ * D8 - blue LED
+ * D4 - green LED
+ */
+
 int main()
 {
     setupHardware();
     HAL_Delay(1000);
-    
     while (1)
     {
         if (uartRxBuffer == 0x74)
@@ -92,7 +102,7 @@ int main()
         }
         else
         {
-            lightsOn();
+            alarmOn();
         }
     }
     return 0;
@@ -106,7 +116,7 @@ static void heatingOn(void)
 
 static void coolingOn(void)
 {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
 }
 static void temperatureRegulationOff(void)
 {
@@ -169,6 +179,10 @@ static void transmitSoundIntensityRead()
 static void setupHardware(void)
 {
     HAL_Init();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
     errorHandlerSetup();
     systemClockConfig();
     adcConfig();
@@ -179,10 +193,6 @@ static void setupHardware(void)
 static void gpioSetup(void)
 { 
     GPIO_InitTypeDef gpioInitStruct;
-    
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-
     gpioInitStruct.Pin = GPIO_PIN_9;
     gpioInitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     gpioInitStruct.Pull = GPIO_NOPULL;
@@ -202,6 +212,9 @@ static void gpioSetup(void)
     
     HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0); 
     HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+    
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10 | GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
 static void errorHandlerSetup(void)
@@ -251,7 +264,7 @@ static void adcConfig(void)
     adcHandle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
     adcHandle.Init.ScanConvMode = ADC_SCAN_ENABLE;              
     adcHandle.Init.ContinuousConvMode = ENABLE;                       
-    adcHandle.Init.NbrOfConversion = 3;                             
+    adcHandle.Init.NbrOfConversion = 4;                             
     adcHandle.Init.DiscontinuousConvMode = DISABLE;                                                    
     adcHandle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     if (HAL_ADC_Init(&adcHandle) != HAL_OK)
@@ -282,7 +295,7 @@ static void adcConfig(void)
     }
     
     channelConfig.Channel      = ADC_CHANNEL_8; //A3
-    channelConfig.Rank         = ADC_REGULAR_RANK_3;
+    channelConfig.Rank         = ADC_REGULAR_RANK_4;
     if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();

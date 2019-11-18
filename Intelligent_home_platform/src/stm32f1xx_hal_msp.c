@@ -18,8 +18,6 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
     peripheralClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
     HAL_RCCEx_PeriphCLKConfig(&peripheralClkInit); 
     
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_DMA1_CLK_ENABLE();
     
     gpioInitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4; //A0, A1, A2
@@ -64,7 +62,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     if (huart->Instance == USART2)
     {
         __HAL_RCC_USART2_CLK_ENABLE();
-        __HAL_RCC_GPIOA_CLK_ENABLE();
         __HAL_RCC_DMA1_CLK_ENABLE();
         
         gpioInitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3;
