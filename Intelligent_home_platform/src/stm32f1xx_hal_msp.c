@@ -10,7 +10,7 @@ void HAL_MspInit(void)
 void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 {
     static DMA_HandleTypeDef dmaHandle;
-    GPIO_InitTypeDef gpioInitStruct;
+    GPIO_InitTypeDef gpioInitStruct = {0};
     RCC_PeriphCLKInitTypeDef peripheralClkInit;
     
     __HAL_RCC_ADC1_CLK_ENABLE();
@@ -111,4 +111,28 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
         HAL_NVIC_DisableIRQ(USART2_IRQn);
     }
 }
+
+void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
+{
+    GPIO_InitTypeDef gpioInitStruct = {0};
+    if(hi2c->Instance==I2C1)
+    {
+        gpioInitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
+        gpioInitStruct.Mode = GPIO_MODE_AF_OD;
+        gpioInitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        HAL_GPIO_Init(GPIOB, &gpioInitStruct);
+        __HAL_AFIO_REMAP_I2C1_ENABLE();
+        __HAL_RCC_I2C1_CLK_ENABLE();
+    }
+}
+
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
+{
+    if(hi2c->Instance==I2C1)
+    {
+        __HAL_RCC_I2C1_CLK_DISABLE();
+        HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8|GPIO_PIN_9);
+    }
+}
+
 
