@@ -39,9 +39,7 @@ void EXTI4_IRQHandler(void)
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 }
 
-
 void TIM3_IRQHandler(void)
-{
-    
+{    
     HAL_TIM_IRQHandler(&timer3Handle);
 }

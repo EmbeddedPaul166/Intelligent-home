@@ -181,33 +181,18 @@ void setupHardware(void)
 
 void timerSetup(void)
 {
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
     timer3Handle.Instance = TIM3;
-    timer3Handle.Init.Prescaler = 0;
+    //25 MHz clock source, 100 ms count
+    timer3Handle.Init.Prescaler = 2500 - 1;
+    timer3Handle.Init.Period = 1000 - 1;
     timer3Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-    timer3Handle.Init.Period = 100;
-    timer3Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    timer3Handle.Init.RepetitionCounter = 0;
     timer3Handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&timer3Handle) != HAL_OK)
     {
         errorHandler();
     }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(&timer3Handle, &sClockSourceConfig) != HAL_OK)
-    {
-        errorHandler();
-    }
-    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
-    sSlaveConfig.InputTrigger = TIM_TS_ITR3;
-    if (HAL_TIM_SlaveConfigSynchro(&timer3Handle, &sSlaveConfig) != HAL_OK)
-    {
-        errorHandler();
-    }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&timer3Handle, &sMasterConfig) != HAL_OK)
+    if (HAL_TIM_Base_Start_IT(&timer3Handle) != HAL_OK)
     {
         errorHandler();
     }
