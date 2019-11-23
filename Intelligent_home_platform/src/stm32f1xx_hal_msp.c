@@ -112,27 +112,21 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     }
 }
 
-void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* timer3Handle_base)
 {
-    GPIO_InitTypeDef gpioInitStruct = {0};
-    if(hi2c->Instance==I2C1)
+    if(timer3Handle_base->Instance==TIM3)
     {
-        gpioInitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
-        gpioInitStruct.Mode = GPIO_MODE_AF_OD;
-        gpioInitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOB, &gpioInitStruct);
-        __HAL_AFIO_REMAP_I2C1_ENABLE();
-        __HAL_RCC_I2C1_CLK_ENABLE();
+        __HAL_RCC_TIM3_CLK_ENABLE();
+        HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);
+        HAL_NVIC_EnableIRQ(TIM3_IRQn);
     }
 }
 
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
+void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* timer3Handle_base)
 {
-    if(hi2c->Instance==I2C1)
+    if(timer3Handle_base->Instance==TIM3)
     {
-        __HAL_RCC_I2C1_CLK_DISABLE();
-        HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8|GPIO_PIN_9);
+        __HAL_RCC_TIM3_CLK_DISABLE();
+        HAL_NVIC_DisableIRQ(TIM3_IRQn);
     }
 }
-
-

@@ -176,25 +176,43 @@ void setupHardware(void)
     adcConfig();
     usartSetup();
     gpioSetup();
-    I2CInit();
+    timerSetup();
 }
 
-void I2CInit(void)
+void timerSetup(void)
 {
-    hi2c1.Instance = I2C1;
-    hi2c1.Init.ClockSpeed = 100000;
-    hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-    hi2c1.Init.OwnAddress1 = 0xf8;
-    hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    hi2c1.Init.OwnAddress2 = 0;
-    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    timer3Handle.Instance = TIM3;
+    timer3Handle.Init.Prescaler = 0;
+    timer3Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+    timer3Handle.Init.Period = 100;
+    timer3Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    timer3Handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&timer3Handle) != HAL_OK)
     {
-        Error_Handler();
-    } 
+        errorHandler();
+    }
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(&timer3Handle, &sClockSourceConfig) != HAL_OK)
+    {
+        errorHandler();
+    }
+    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
+    sSlaveConfig.InputTrigger = TIM_TS_ITR3;
+    if (HAL_TIM_SlaveConfigSynchro(&timer3Handle, &sSlaveConfig) != HAL_OK)
+    {
+        errorHandler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&timer3Handle, &sMasterConfig) != HAL_OK)
+    {
+        errorHandler();
+    }
 }
+
 
 void gpioSetup(void)
 { 

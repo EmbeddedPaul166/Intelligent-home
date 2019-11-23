@@ -19,8 +19,6 @@
  * D6 - red LED
  * D8 - blue LED
  * D4 - green LED
- * D15(PB8) SCL
- * D14(PB9) SDA 
  */
 
 void setupHardware(void);
@@ -28,7 +26,7 @@ void systemClockConfig(void);
 void adcConfig(void);
 void usartSetup(void);
 void gpioSetup(void);
-void I2CInit(void);
+void timerSetup(void);
 void errorHandlerSetup(void);
 void errorHandler(void);
 void transmitTemperatureRead(void);
@@ -68,6 +66,7 @@ ADC_HandleTypeDef adcHandle;
 UART_HandleTypeDef uartHandle;
 DMA_HandleTypeDef dmaUart2HandleRx;
 DMA_HandleTypeDef dmaUart2HandleTx;
+TIM_HandleTypeDef timer3Handle;
 
 
 #endif /*MAIN*/
