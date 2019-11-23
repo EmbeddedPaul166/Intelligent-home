@@ -26,6 +26,7 @@ void systemClockConfig(void);
 void adcConfig(void);
 void usartSetup(void);
 void gpioSetup(void);
+void timerSetup(void);
 void errorHandlerSetup(void);
 void errorHandler(void);
 void transmitTemperatureRead(void);
@@ -65,6 +66,7 @@ ADC_HandleTypeDef adcHandle;
 UART_HandleTypeDef uartHandle;
 DMA_HandleTypeDef dmaUart2HandleRx;
 DMA_HandleTypeDef dmaUart2HandleTx;
+TIM_HandleTypeDef timer3Handle;
 
 
 #endif /*MAIN*/
