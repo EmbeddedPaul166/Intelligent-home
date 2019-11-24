@@ -1,5 +1,17 @@
 #include "irq.h"
-#include "main.h"
+#include "sensors.h"
+#include "actuators.h"
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_nucleo.h"
+#include "globals.h"
+
+volatile int8_t tresholdDirection;
+
+ADC_HandleTypeDef adcHandle;
+UART_HandleTypeDef uartHandle;
+DMA_HandleTypeDef dmaUart2HandleRx;
+DMA_HandleTypeDef dmaUart2HandleTx;
+TIM_HandleTypeDef timer3Handle;
 
 void SysTick_Handler(void)
 {
@@ -41,5 +53,10 @@ void EXTI4_IRQHandler(void)
 
 void TIM3_IRQHandler(void)
 {    
+    convertSensorMeasurements();
+    setTresholdValue();    
+    handleRegulation();
+    
     HAL_TIM_IRQHandler(&timer3Handle);
 }
+
