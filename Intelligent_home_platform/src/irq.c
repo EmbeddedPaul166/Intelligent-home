@@ -6,6 +6,7 @@
 #include "globals.h"
 
 volatile int8_t tresholdDirection;
+volatile uint8_t readingsDone;
 
 ADC_HandleTypeDef adcHandle;
 UART_HandleTypeDef uartHandle;
@@ -52,11 +53,14 @@ void EXTI4_IRQHandler(void)
 }
 
 void TIM3_IRQHandler(void)
-{    
-    convertSensorMeasurements();
-    setTresholdValue();    
-    handleRegulation();
-    
+{   
+    if (readingsDone)
+    {
+        convertSensorMeasurements();
+        setTresholdValue();    
+        handleRegulation();
+        readingsDone = 0;
+    }
     HAL_TIM_IRQHandler(&timer3Handle);
 }
 

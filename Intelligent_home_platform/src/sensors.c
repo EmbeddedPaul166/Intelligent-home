@@ -9,6 +9,7 @@ volatile uint32_t temperatureRead;
 volatile uint32_t lightIntensityRead;
 volatile uint32_t soundIntensityRead;
 volatile uint32_t tresholdRead;
+volatile uint8_t readingsDone;
 
 volatile float temperatureInCelsius;
 volatile float lightIntensityPercentege;
@@ -30,8 +31,7 @@ void convertSensorMeasurements(void)
 
 void setTemperatureTreshold(void)
 {
-    float resistance = (float)(MAXIMUM_ADC_VALUE-(float)tresholdRead)*10000.0/(float)tresholdRead;
-    temperatureInCelsiusTreshold = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
+    temperatureInCelsiusTreshold =((float)tresholdRead/MAXIMUM_ADC_VALUE)*30.0+10; 
 }
 
 void setLightIntensityTreshold(void)
@@ -46,10 +46,14 @@ void setSoundIntensityTreshold(void)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-    temperatureRead = adcRead[0]; 
-    lightIntensityRead = adcRead[1]; 
-    soundIntensityRead = adcRead[2]; 
-    tresholdRead = adcRead[3];
+    if (!readingsDone)
+    {
+        temperatureRead = adcRead[0]; 
+        lightIntensityRead = adcRead[1]; 
+        soundIntensityRead = adcRead[2]; 
+        tresholdRead = adcRead[3];
+        readingsDone = 1;
+    }
 }
 
 void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc)

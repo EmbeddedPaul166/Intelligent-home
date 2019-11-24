@@ -9,6 +9,7 @@ UART_HandleTypeDef uartHandle;
 DMA_HandleTypeDef dmaUart2HandleRx;
 DMA_HandleTypeDef dmaUart2HandleTx;
 TIM_HandleTypeDef timer3Handle;
+volatile uint8_t readingsDone;
 
 void setupHardware(void)
 {
@@ -95,6 +96,7 @@ void errorHandlerSetup(void)
 
 void adcConfig(void)
 {
+    readingsDone = 0;
     ADC_ChannelConfTypeDef channelConfig;
 
     adcHandle.Instance = ADC1; 
@@ -148,7 +150,7 @@ void timerSetup(void)
 {
     timer3Handle.Instance = TIM3;
     timer3Handle.Init.Prescaler = 64000 - 1;
-    timer3Handle.Init.Period = 100 - 1;
+    timer3Handle.Init.Period = 50 - 1;
     timer3Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
     timer3Handle.Init.RepetitionCounter = 0;
     timer3Handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -221,7 +223,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
     HAL_DMA_Init(&dmaHandle);
     __HAL_LINKDMA(hadc, DMA_Handle, dmaHandle);
 
-    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 1, 1);
+    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
@@ -273,11 +275,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
         HAL_DMA_Init(&dmaUart2HandleTx);
         __HAL_LINKDMA(huart,hdmatx,dmaUart2HandleTx);
         
-        HAL_NVIC_SetPriority(USART2_IRQn, 2, 2);
+        HAL_NVIC_SetPriority(USART2_IRQn, 1, 1);
         HAL_NVIC_EnableIRQ(USART2_IRQn);
-        HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 2, 2); 
+        HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 1, 1); 
         HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
-        HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 2, 2); 
+        HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 1, 1); 
         HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
     }
 }

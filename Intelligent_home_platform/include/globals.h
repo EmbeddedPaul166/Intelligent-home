@@ -16,6 +16,7 @@ extern volatile uint32_t temperatureRead;
 extern volatile uint32_t lightIntensityRead;
 extern volatile uint32_t soundIntensityRead;
 extern volatile uint32_t tresholdRead;
+extern volatile uint8_t readingsDone;
 extern volatile int8_t tresholdDirection;
 
 extern volatile float temperatureInCelsius;
