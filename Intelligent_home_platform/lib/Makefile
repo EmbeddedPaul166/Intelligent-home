@@ -9,7 +9,7 @@ BUILD_PATH := ../build
 
 CC := arm-none-eabi-gcc
 
-CFLAGS += -g -O0 -mthumb -mcpu=cortex-m3 --specs=nosys.specs -Wall -Wextra -pedantic
+CFLAGS += -g -O0 -mthumb -mcpu=cortex-m3 --specs=nosys.specs -Wall -Wextra 
 
 SRC_EXT := c
 SOURCES := $(shell find $(LIBRARY_SRC_PATH)/ -type f -name *.$(SRC_EXT))

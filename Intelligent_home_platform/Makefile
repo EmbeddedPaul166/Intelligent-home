@@ -38,7 +38,7 @@ INC := -I $(INC_PATH) -I $(LIBRARY_INC_PATH)
 $(BIN): $(OBJECTS) $(LIB_OBJECTS) $(ASM_OBJECTS)
 	@mkdir -p $(BIN_PATH)	
 	@echo "Linking $(BIN)..."
-	$(CC) $^ -T $(LD_SCRIPT) $(CFLAGS) -o $(BIN).elf	
+	$(CC) $^ -T $(LD_SCRIPT) $(CFLAGS) -lm -o $(BIN).elf	
 	@echo "Linking done"
 	@echo ""
 	$(OBJ_COPY) -O binary $(BIN_PATH)/$(EXECUTABLE).elf $(BIN_PATH)/$(EXECUTABLE).bin
