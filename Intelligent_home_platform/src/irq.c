@@ -5,8 +5,10 @@
 #include "stm32f1xx_nucleo.h"
 #include "globals.h"
 
+volatile uint8_t measurementsDone;
+volatile uint32_t readCount;
+volatile uint32_t adcReadAverage[ADC_BUFFER_SIZE];
 volatile int8_t tresholdDirection;
-volatile uint8_t readingsDone;
 
 ADC_HandleTypeDef adcHandle;
 UART_HandleTypeDef uartHandle;
@@ -54,12 +56,11 @@ void EXTI4_IRQHandler(void)
 
 void TIM3_IRQHandler(void)
 {   
-    if (readingsDone)
+    if (measurementsDone)
     {
         convertSensorMeasurements();
-        setTresholdValue();    
+        setTresholdValue(); 
         handleRegulation();
-        readingsDone = 0;
     }
     HAL_TIM_IRQHandler(&timer3Handle);
 }

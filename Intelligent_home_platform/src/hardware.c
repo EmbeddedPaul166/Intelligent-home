@@ -9,7 +9,7 @@ UART_HandleTypeDef uartHandle;
 DMA_HandleTypeDef dmaUart2HandleRx;
 DMA_HandleTypeDef dmaUart2HandleTx;
 TIM_HandleTypeDef timer3Handle;
-volatile uint8_t readingsDone;
+volatile uint32_t adcRead[ADC_BUFFER_SIZE];
 
 void setupHardware(void)
 {
@@ -96,7 +96,6 @@ void errorHandlerSetup(void)
 
 void adcConfig(void)
 {
-    readingsDone = 0;
     ADC_ChannelConfTypeDef channelConfig;
 
     adcHandle.Instance = ADC1; 
@@ -113,7 +112,7 @@ void adcConfig(void)
 
     channelConfig.Channel      = ADC_CHANNEL_0; //A0
     channelConfig.Rank         = ADC_REGULAR_RANK_1;
-    channelConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+    channelConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
     if (HAL_ADC_ConfigChannel(&adcHandle, &channelConfig) != HAL_OK)
     {
         errorHandler();

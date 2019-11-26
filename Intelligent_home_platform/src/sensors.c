@@ -9,7 +9,7 @@ volatile uint32_t temperatureRead;
 volatile uint32_t lightIntensityRead;
 volatile uint32_t soundIntensityRead;
 volatile uint32_t tresholdRead;
-volatile uint8_t readingsDone;
+volatile uint8_t measurementsDone;
 
 volatile float temperatureInCelsius;
 volatile float lightIntensityPercentege;
@@ -19,40 +19,58 @@ volatile float temperatureInCelsiusTreshold;
 volatile float lightIntensityPercentegeTreshold;
 volatile float soundIntensityPercentegeTreshold;
 
-uint32_t adcRead[ADC_BUFFER_SIZE];
+volatile uint32_t adcRead[ADC_BUFFER_SIZE];
+volatile uint32_t readCount;
+
+TIM_HandleTypeDef timer3Handle;
 
 void convertSensorMeasurements(void)
 {
-    float resistance = (float)(MAXIMUM_ADC_VALUE-(float)temperatureRead)*10000.0/(float)temperatureRead;
+    float resistance = (float)(MAXIMUM_ADC_VALUE-(float)adcReadAverage[0])*10000.0/(float)adcReadAverage[0];
     temperatureInCelsius = 1.0/(logf(resistance/10000.0)/3975.0+1.0/298.15)-273.15;
-    lightIntensityPercentege = ((float)lightIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
-    soundIntensityPercentege = ((float)soundIntensityRead/MAXIMUM_ADC_VALUE)*100.0;
+    lightIntensityPercentege = ((float)adcReadAverage[1]/MAXIMUM_ADC_VALUE)*100.0;
+    soundIntensityPercentege = ((float)adcReadAverage[2]/MAXIMUM_ADC_VALUE)*100.0;
 }
 
 void setTemperatureTreshold(void)
 {
-    temperatureInCelsiusTreshold =((float)tresholdRead/MAXIMUM_ADC_VALUE)*30.0+10; 
+    temperatureInCelsiusTreshold =((float)adcReadAverage[3]/MAXIMUM_ADC_VALUE)*30.0+10; 
 }
 
 void setLightIntensityTreshold(void)
 {
-    lightIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+    lightIntensityPercentegeTreshold = ((float)adcReadAverage[3]/MAXIMUM_ADC_VALUE)*100.0;
 }
 
 void setSoundIntensityTreshold(void)
 {
-    soundIntensityPercentegeTreshold = ((float)tresholdRead/MAXIMUM_ADC_VALUE)*100.0;
+    soundIntensityPercentegeTreshold = ((float)adcReadAverage[3]/MAXIMUM_ADC_VALUE)*100.0;
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-    if (!readingsDone)
+    if (readCount != NUMBER_OF_READS)
     {
-        temperatureRead = adcRead[0]; 
-        lightIntensityRead = adcRead[1]; 
-        soundIntensityRead = adcRead[2]; 
-        tresholdRead = adcRead[3];
-        readingsDone = 1;
+        temperatureRead += adcRead[0]; 
+        lightIntensityRead += adcRead[1]; 
+        soundIntensityRead += adcRead[2]; 
+        tresholdRead += adcRead[3];
+        readCount++;
+    }
+    else
+    { 
+        adcReadAverage[0] = temperatureRead/(float)NUMBER_OF_READS;
+        adcReadAverage[1] = lightIntensityRead/(float)NUMBER_OF_READS;
+        adcReadAverage[2] = soundIntensityRead/(float)NUMBER_OF_READS;
+        adcReadAverage[3] = tresholdRead/(float)NUMBER_OF_READS;
+        
+        temperatureRead = 0;
+        lightIntensityRead = 0;
+        soundIntensityRead = 0;
+        tresholdRead = 0;
+        
+        measurementsDone = 1;
+        readCount = 0;
     }
 }
 

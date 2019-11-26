@@ -7,6 +7,7 @@
 
 #define MAXIMUM_ADC_VALUE 4095.0
 #define ADC_BUFFER_SIZE 4
+#define NUMBER_OF_READS 100
 #define UART_TX_BUFFER_SIZE 2
 #define TEMPERATURE_REQUEST 0x74
 #define LIGHT_INTENSITY_REQUEST 0x6C
@@ -16,7 +17,7 @@ extern volatile uint32_t temperatureRead;
 extern volatile uint32_t lightIntensityRead;
 extern volatile uint32_t soundIntensityRead;
 extern volatile uint32_t tresholdRead;
-extern volatile uint8_t readingsDone;
+extern volatile uint8_t measurementsDone;
 extern volatile int8_t tresholdDirection;
 
 extern volatile float temperatureInCelsius;
@@ -27,7 +28,10 @@ extern volatile float temperatureInCelsiusTreshold;
 extern volatile float lightIntensityPercentegeTreshold;
 extern volatile float soundIntensityPercentegeTreshold;
 
-extern uint32_t adcRead[ADC_BUFFER_SIZE];
+extern volatile uint32_t adcRead[ADC_BUFFER_SIZE];
+extern volatile uint32_t readCount;
+
+extern volatile uint32_t adcReadAverage[ADC_BUFFER_SIZE];
 extern uint32_t uartTxBuffer[UART_TX_BUFFER_SIZE];
 extern uint8_t uartRxBuffer;
 
