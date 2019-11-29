@@ -3,6 +3,8 @@
 ### Brief description
 This is a simple implementation of an intelligent home using STM32F103RB Nucleo board. It provides temperature regulation, intelligent lights and alarm simulation. Software is primarily using interrupts and direct memory access with 12 bit ADC to implement project functionality. Main goals of this project were to tinker with STM32F103RB, practice embedded C, learn remote debugging using openocd with gdb and write a custom Makefile.
 
+<img src="https://github.com/EmbeddedPaul166/Intelligent-home/blob/master/stm32.jpg" height="500" width="500">
+
 ### Electronic components
 - STM32F103RB Nucleo
 - Grove shield
@@ -13,9 +15,6 @@ This is a simple implementation of an intelligent home using STM32F103RB Nucleo 
 - Grove button
 - Grove potentiometer
 - 3x LED
-
-
-<img src="https://github.com/EmbeddedPaul166/Intelligent-home/blob/master/stm32.jpg" height="500" width="500">
 
 ### Grove shield pinout
 - A0 temperature sensor
